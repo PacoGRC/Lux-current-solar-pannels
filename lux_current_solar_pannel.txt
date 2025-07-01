@@ -1,0 +1,92 @@
+esphome:
+  name: "lux-et-current-solar-panel"
+  friendly_name: Test
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "jUZw3rgLdTi+VOZNM2vxaeh4ZCg1hn4j0lEwiTps4R4="
+
+ota:
+  - platform: esphome
+    password: "078bb7e690192e2fec4e0ce6adfb0f81"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Test Fallback Hotspot"
+    password: "K00ZqUb9JIgz"
+
+captive_portal:
+
+i2c:
+  sda: 21
+  scl: 22
+  scan: False
+
+ads1115:
+  address: 0x48
+
+sensor:
+  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 10s
+    entity_category: "diagnostic"
+    accuracy_decimals: 1 
+
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+    accuracy_decimals: 1     
+    device_class: ""
+
+  - platform: bh1750
+    name: "Outside Light Level"
+    address: 0x23
+    update_interval: 3s
+
+  - platform: ads1115
+    multiplexer: 'A0_GND'
+    id: test
+    gain: 4.096
+    name: "WCS1600"
+    update_interval: 2s
+    filters:
+      - calibrate_linear:
+        #       V       I
+        # Map 0.0 (from sensor) to 0.0 (true value)
+            - 1.7487 ->	0
+            - 1.98 -> 9.9
+    unit_of_measurement: "A"
+
+  - platform: ads1115
+    multiplexer: 'A1_GND'
+    id: test2
+    gain: 4.096
+    name: "WCS1600b"
+    update_interval: 2s
+    filters:
+      - calibrate_linear:
+        #       V       I
+        # Map 0.0 (from sensor) to 0.0 (true value)
+            - 1.757 ->	0
+            - 1.984 -> 9.9
+    unit_of_measurement: "A"
+
+
